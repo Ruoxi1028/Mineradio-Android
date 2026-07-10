@@ -2648,7 +2648,6 @@ async function handleQQSearch(keywords, limit) {
     return !!song.name;
   });
 }
-
 async function handleQQSongUrl(mid, mediaMid, qualityPreference) {
   const songmid = String(mid || '').trim();
   if (!songmid) return { provider: 'qq', url: '', error: 'MISSING_MID', message: 'Missing QQ song mid' };
@@ -3101,7 +3100,6 @@ async function handleSongUrl(id, loginInfo, qualityPreference) {
     requestedQuality,
   };
 }
-
 // ---------- 业务: 登录态/用户信息 ----------
 function readCookieFromResponse(resp) {
   const candidates = [
@@ -3688,6 +3686,40 @@ const server = http.createServer(async (req, res) => {
         vipLabel: loginInfo.vipLabel || '无VIP',
       });
     } catch (err) { console.error('[SongUrl]', err); sendJSON(res, { error: err.message }, 500); }
+    return;
+  }
+
+  // ---------- 网易云 Cookie 粘贴接口 ----------
+  if (pn === '/api/login/netease/cookie') {
+    try {
+      const body = await readRequestBody(req);
+      const raw = body.cookie || body.data || body.text || '';
+      const normalized = normalizeCookieHeader(raw);
+      const obj = parseCookieString(normalized);
+      if (!obj.MUSIC_U && !obj.uid && !obj.music_uid) {
+        console.warn('[NeteaseCookie] missing MUSIC_U, but still save');
+      }
+      saveCookie(normalized);
+      const info = await getLoginInfo();
+      sendJSON(res, { ...info, saved: true, hasCookie: !!userCookie });
+    } catch (err) {
+      console.error('[NeteaseCookie]', err);
+      sendJSON(res, { loggedIn: false, error: err.message }, 500);
+    }
+    return;
+  }
+
+  // ---------- 网易云登录状态查询 ----------
+  if (pn === '/api/login/netease/status') {
+    const info = await getLoginInfo();
+    if (!info.loggedIn && userCookie) {
+      try {
+        const reload = await getLoginInfo();
+        sendJSON(res, reload);
+        return;
+      } catch (e) {}
+    }
+    sendJSON(res, info);
     return;
   }
 
