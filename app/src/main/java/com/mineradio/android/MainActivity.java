@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
             } catch (Exception e) {
-                Toast.makeText(MainActivity.this, "閺冪姵纭堕幍鎾崇磻濞村繗顫嶉崳? " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "打开链接失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
                 } catch (Exception e) {
-                    Toast.makeText(MainActivity.this, "閺冪姵纭堕幍鎾崇磻闁剧偓甯?, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "无法打开链接", Toast.LENGTH_SHORT).show();
                 }
                 return true;
             }
@@ -174,13 +174,13 @@ public class MainActivity extends AppCompatActivity {
             "  getState: function(){return Promise.resolve({isMaximized:false,isMinimized:false,isFullscreen:!!document.fullscreenElement});}," +
             "  close: function(){/* no-op */return Promise.resolve();}," +
             "  openNeteaseMusicLogin:function(){" +
-            "    if(window.AndroidBridge)window.AndroidBridge.showToast('鐠囧嘲婀鐟板毉閻ㄥ嫭绁荤憴鍫濇珤娑擃厾娅ヨぐ鏇犵秹閺勬挷绨棅鍏呯\\n閻ц缍嶉崥搴℃礀閸掔増婀版い鍨閸斻劎鐭樼拹纰縪okie');" +
+            "    if(window.AndroidBridge)window.AndroidBridge.showToast('请先在浏览器登录网易云\\n然后复制cookie');" +
             "    if(window.AndroidBridge)window.AndroidBridge.openExternalBrowser('https://music.163.com/#/login');" +
             "    return Promise.resolve({ok:true,cookie:''});" +
             "  }," +
             "  clearNeteaseMusicLogin:function(){return Promise.resolve();}," +
             "  openQQMusicLogin:function(){" +
-            "    if(window.AndroidBridge)window.AndroidBridge.showToast('鐠囧嘲婀鐟板毉閻ㄥ嫭绁荤憴鍫濇珤娑擃厾娅ヨぐ鏄婹闂婂厖绠癨\n閻ц缍嶉崥搴℃礀閸掔増婀版い鍨閸斻劎鐭樼拹纰縪okie');" +
+            "    if(window.AndroidBridge)window.AndroidBridge.showToast('请先在浏览器登录QQ音乐\\n然后复制cookie');" +
             "    if(window.AndroidBridge)window.AndroidBridge.openExternalBrowser('https://y.qq.com/n/ryqq/profile');" +
             "    return Promise.resolve({ok:true,cookie:''});" +
             "  }," +
@@ -205,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
             "var _origFetch = window.fetch;" +
             "window.__apiBase = \"https://mineradio-android-production-8c4b.up.railway.app\"; window.fetch = function(url, opts) { if (typeof url === \"string\" \u0026\u0026 url.startsWith(\"/api/\")) { url = window.__apiBase + url; }" +
             "  if (typeof url === 'string' && url.startsWith('/api/')) {" +
-            "    if (window.AndroidBridge) window.AndroidBridge.showToast('闂団偓鐟曚礁鎮楃粩顖涙箛閸斺€虫珤閺€顖涘瘮鐎瑰本鏆ｉ崝鐔诲厴');" +
+            "    if (window.AndroidBridge) window.AndroidBridge.showToast('后端未启动');" +
             "    return Promise.resolve({json:function(){return Promise.resolve({error:'backend not available',loggedIn:false,playlists:[],tracks:[],songs:[]});}});" +
             "  }" +
             "  return _origFetch.call(window, url, opts);" +
