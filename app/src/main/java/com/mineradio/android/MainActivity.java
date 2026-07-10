@@ -157,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
     private void injectDesktopStubs() {
         String js = "javascript:(function() {" +
             "if (window.desktopWindow) return;" +
-            "window.desktopWindow = { apiBase: "https://YOUR-RAILWAY-URL.up.railway.app"," +
+            "window.desktopWindow = { apiBase: \"https://mineradio-android-production-8c4b.up.railway.app\"," +
             "  isDesktop: true," +
             "  minimize: function(){return Promise.resolve();}," +
             "  toggleMaximize: function(){return Promise.resolve();}," +
@@ -201,9 +201,9 @@ public class MainActivity extends AppCompatActivity {
             "};" +
             "document.documentElement.classList.add('simple-mode-preload');" +
             "document.body.classList.add('android-shell');" +
-            
+
             "var _origFetch = window.fetch;" +
-            "window.__apiBase = "https://YOUR-RAILWAY-URL.up.railway.app"; window.fetch = function(url, opts) { if (typeof url === \"string\" \u0026\u0026 url.startsWith(\"/api/\")) { url = window.__apiBase + url; }" +
+            "window.__apiBase = \"https://mineradio-android-production-8c4b.up.railway.app\"; window.fetch = function(url, opts) { if (typeof url === \"string\" \u0026\u0026 url.startsWith(\"/api/\")) { url = window.__apiBase + url; }" +
             "  if (typeof url === 'string' && url.startsWith('/api/')) {" +
             "    if (window.AndroidBridge) window.AndroidBridge.showToast('闂団偓鐟曚礁鎮楃粩顖涙箛閸斺€虫珤閺€顖涘瘮鐎瑰本鏆ｉ崝鐔诲厴');" +
             "    return Promise.resolve({json:function(){return Promise.resolve({error:'backend not available',loggedIn:false,playlists:[],tracks:[],songs:[]});}});" +
