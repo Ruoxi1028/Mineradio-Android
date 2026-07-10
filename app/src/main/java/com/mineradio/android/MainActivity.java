@@ -36,10 +36,14 @@ public class MainActivity extends AppCompatActivity {
 
         @JavascriptInterface
         public void openExternalBrowser(String url) {
-            // 改为在 WebView 内部加载，不再跳转外部
-            if (webView != null) {
-                webView.loadUrl(url);
-            }
+            // 必须在主线程操作 WebView
+            MainActivity.this.runOnUiThread(() -> {
+                if (webView != null && url != null && !url.isEmpty()) {
+                    webView.loadUrl(url);
+                } else {
+                    Toast.makeText(MainActivity.this, "无法打开链接", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
 
         @JavascriptInterface
@@ -116,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                // 如果加载的是登录页面，不注入桌面 stub（避免干扰）
+                // 登录页面不注入按钮
                 if (url.contains("music.163.com") || url.contains("y.qq.com")) {
                     return;
                 }
@@ -126,18 +130,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
-
-                // 允许在 WebView 内加载的域名（包括本地和登录页）
                 if (url.startsWith("https://mineradio.local/") ||
                     url.startsWith("http://127.0.0.1:") ||
                     url.contains("music.163.com") ||
                     url.contains("y.qq.com") ||
                     url.contains("qq.com") ||
                     url.contains("163.com")) {
-                    return false; // 在 WebView 内打开
+                    return false;
                 }
-
-                // 其他链接用外部浏览器打开
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW, request.getUrl());
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -204,6 +204,24 @@ public class MainActivity extends AppCompatActivity {
             "};" +
             "document.documentElement.classList.add('simple-mode-preload');" +
             "document.body.classList.add('android-shell');" +
+
+            // 添加“粘贴 Cookie”浮动按钮
+            "var btn = document.createElement('button');" +
+            "btn.innerText = '📋 粘贴Cookie';" +
+            "btn.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;padding:12px 18px;background:#1DB954;color:white;border:none;border-radius:30px;font-size:14px;box-shadow:0 2px 10px rgba(0,0,0,0.3);';" +
+            "btn.onclick = function() {" +
+            "  var cookie = prompt('请粘贴你从网易云/QQ音乐复制的Cookie（全部内容）：');" +
+            "  if (cookie) {" +
+            "    fetch('https://mineradio-android-production-8c4b.up.railway.app/api/login/netease/cookie', {" +
+            "      method: 'POST'," +
+            "      headers: {'Content-Type':'application/json'}," +
+            "      body: JSON.stringify({cookie: cookie})" +
+            "    }).then(r => r.json()).then(data => {" +
+            "      alert(data.ok ? '✅ 登录成功！' : '❌ 失败：'+data.message);" +
+            "    }).catch(e => alert('请求失败，请检查网络'));" +
+            "  }" +
+            "};" +
+            "document.body.appendChild(btn);" +
 
             "var _origFetch = window.fetch;" +
             "window.__apiBase = \"https://mineradio-android-production-8c4b.up.railway.app\"; window.fetch = function(url, opts) { if (typeof url === \"string\" \u0026\u0026 url.startsWith(\"/api/\")) { url = window.__apiBase + url; }" +
