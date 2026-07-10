@@ -2,8 +2,6 @@ package com.mineradio.android;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.content.res.AssetManager;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.KeyEvent;
@@ -18,10 +16,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.webkit.WebViewAssetLoader;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -42,12 +36,9 @@ public class MainActivity extends AppCompatActivity {
 
         @JavascriptInterface
         public void openExternalBrowser(String url) {
-            try {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-            } catch (Exception e) {
-                Toast.makeText(MainActivity.this, "打开链接失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            // 改为在 WebView 内部加载，不再跳转外部
+            if (webView != null) {
+                webView.loadUrl(url);
             }
         }
 
@@ -117,7 +108,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
-                String path = uri.getPath();
                 WebResourceResponse response = assetLoader.shouldInterceptRequest(uri);
                 if (response != null) return response;
                 return super.shouldInterceptRequest(view, request);
@@ -126,15 +116,28 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
+                // 如果加载的是登录页面，不注入桌面 stub（避免干扰）
+                if (url.contains("music.163.com") || url.contains("y.qq.com")) {
+                    return;
+                }
                 injectDesktopStubs();
             }
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
-                if (url.startsWith("https://mineradio.local/") || url.startsWith("http://127.0.0.1:")) {
-                    return false;
+
+                // 允许在 WebView 内加载的域名（包括本地和登录页）
+                if (url.startsWith("https://mineradio.local/") ||
+                    url.startsWith("http://127.0.0.1:") ||
+                    url.contains("music.163.com") ||
+                    url.contains("y.qq.com") ||
+                    url.contains("qq.com") ||
+                    url.contains("163.com")) {
+                    return false; // 在 WebView 内打开
                 }
+
+                // 其他链接用外部浏览器打开
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW, request.getUrl());
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -174,13 +177,13 @@ public class MainActivity extends AppCompatActivity {
             "  getState: function(){return Promise.resolve({isMaximized:false,isMinimized:false,isFullscreen:!!document.fullscreenElement});}," +
             "  close: function(){/* no-op */return Promise.resolve();}," +
             "  openNeteaseMusicLogin:function(){" +
-            "    if(window.AndroidBridge)window.AndroidBridge.showToast('请先在浏览器登录网易云\\n然后复制cookie');" +
+            "    if(window.AndroidBridge)window.AndroidBridge.showToast('正在打开网易云登录...');" +
             "    if(window.AndroidBridge)window.AndroidBridge.openExternalBrowser('https://music.163.com/#/login');" +
             "    return Promise.resolve({ok:true,cookie:''});" +
             "  }," +
             "  clearNeteaseMusicLogin:function(){return Promise.resolve();}," +
             "  openQQMusicLogin:function(){" +
-            "    if(window.AndroidBridge)window.AndroidBridge.showToast('请先在浏览器登录QQ音乐\\n然后复制cookie');" +
+            "    if(window.AndroidBridge)window.AndroidBridge.showToast('正在打开QQ音乐登录...');" +
             "    if(window.AndroidBridge)window.AndroidBridge.openExternalBrowser('https://y.qq.com/n/ryqq/profile');" +
             "    return Promise.resolve({ok:true,cookie:''});" +
             "  }," +
@@ -217,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK && webView != null && webView.canGoBack()) {
-            webView.evaluateJavascript("window.history.back();", null);
+            webView.goBack();
             return true;
         }
         return super.onKeyDown(keyCode, event);
